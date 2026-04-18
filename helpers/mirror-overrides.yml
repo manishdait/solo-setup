@@ -1,0 +1,24 @@
+grpc:
+  livenessProbe:
+    initialDelaySeconds: 90
+  readinessProbe:
+    initialDelaySeconds: 90
+  resources:
+    limits:
+      memory: 512Mi
+restjava:
+  livenessProbe:
+    initialDelaySeconds: 90
+  resources:
+    limits:
+      memory: 512Mi
+importer:
+  livenessProbe:
+    initialDelaySeconds: 120
+  readinessProbe:
+    initialDelaySeconds: 120
+  resources:
+    limits:
+      memory: 1024Mi
+  env:
+    HEDERA_MIRROR_IMPORTER_REPROCESSONSTART: "false"
