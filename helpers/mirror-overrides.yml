@@ -1,24 +1,36 @@
 grpc:
+  startupProbe:
+    failureThreshold: 120
+    periodSeconds: 2
   livenessProbe:
-    initialDelaySeconds: 90
-  readinessProbe:
-    initialDelaySeconds: 90
+    initialDelaySeconds: 30
   resources:
     limits:
+      memory: 2Gi
+    requests:
+      cpu: 250m
       memory: 512Mi
+
 restjava:
+  startupProbe:
+    failureThreshold: 120
+    periodSeconds: 2
   livenessProbe:
-    initialDelaySeconds: 90
+    initialDelaySeconds: 30
   resources:
     limits:
+      memory: 2Gi
+    requests:
+      cpu: 250m
       memory: 512Mi
+
 importer:
-  livenessProbe:
-    initialDelaySeconds: 120
-  readinessProbe:
-    initialDelaySeconds: 120
+  startupProbe:
+    failureThreshold: 120
+    periodSeconds: 2
   resources:
     limits:
-      memory: 1024Mi
-  env:
-    HEDERA_MIRROR_IMPORTER_REPROCESSONSTART: "false"
+      memory: 2Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi

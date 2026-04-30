@@ -5,8 +5,8 @@ SOLO_CLUSTER_NAME=solo
 SOLO_NAMESPACE=solo
 SOLO_DEPLOYMENT=solo-deployment
 NODE_IDS=node1
-CONSENSUS_NODE_VERSION=v0.71.0
-MIRROR_NODE_VERSION=v0.138.0
+CONSENSUS_NODE_VERSION=v0.73.0
+MIRROR_NODE_VERSION=v0.153.0
 ENABLE_INGRESS_FLAG=--enable-ingress
 HBAR_AMOUNT=10000000
 
@@ -45,9 +45,12 @@ kubectl port-forward svc/mirror-1-grpc -n ${SOLO_NAMESPACE} 5600:5600 &
 kubectl port-forward svc/mirror-1-web3 -n ${SOLO_NAMESPACE} 8545:80 &
 kubectl port-forward svc/mirror-1-restjava -n ${SOLO_NAMESPACE} 8084:80 &
 
+solo explorer node add --deployment ${SOLO_DEPLOYMENT} --cluster-ref kind-${SOLO_NAMESPACE} --dev
+
 solo relay node add -i ${NODE_IDS} --deployment ${SOLO_DEPLOYMENT} --dev -f helpers/relay-overrides.yml
 
 kubectl get svc -n ${SOLO_NAMESPACE}
+
 
 rm -rf out
 mkdir out
