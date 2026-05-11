@@ -1,0 +1,27 @@
+#!/usr/bin/bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+  echo "Usage: solo.sh [bake|purge|check] [options]"
+  exit 1
+}
+
+COMMAND=$1
+shift
+
+case "$COMMAND" in
+  check)
+    bash "$SCRIPT_DIR/scripts/check.sh" "$@"
+    ;;
+  bake)
+    bash "$SCRIPT_DIR/scripts/bake.sh" "$@"
+    ;;
+  purge)
+    bash "$SCRIPT_DIR/scripts/purge.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac
