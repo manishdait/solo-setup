@@ -3,7 +3,9 @@ set -e
 
 REQUIRED_PACKAGES=("docker" "kind"  "kubectl" "solo")
 
-echo -e "\n--- Checking System Dependencies ---\n"
+echo -e "==================================================="
+echo -e "            Checking System Dependencies           "
+echo -e "==================================================="
 
 for cmd in "${REQUIRED_PACKAGES[@]}"; do
   if command -v "$cmd" &> /dev/null; then
@@ -13,4 +15,5 @@ for cmd in "${REQUIRED_PACKAGES[@]}"; do
   fi
 done
 
-echo -e "\n------------------------------------\n"
+echo -e "==================================================="
+echo ""

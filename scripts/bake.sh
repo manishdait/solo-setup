@@ -10,16 +10,16 @@ MIRROR_NODE_VERSION=v0.153.0
 ENABLE_INGRESS_FLAG=--enable-ingress
 HBAR_AMOUNT=10000000
 
-MIRROR_NODE=false
-JSON_RPC=false
-EXPLORER=false
+MIRROR_NODE=true
+JSON_RPC=true
+EXPLORER=true
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -a | --include-all)
-      MIRROR_NODE=true
-      JSON_RPC=true
-      EXPLORER=true
+    -c | --core)
+      MIRROR_NODE=false
+      JSON_RPC=false
+      EXPLORER=false
       shift
       ;;
     -m | --mirror)
@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       ;;
-    -cv | --consensus-node-version)
+    -nt | --node-tag)
       if [[ -n "$2" && "$2" != -* ]]; then
         CONSENSUS_NODE_VERSION="$2"
         shift 2
@@ -58,7 +58,7 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       ;;
-    -mv | --mirror-node-version)
+    -mt | --mirror-tag)
       if [[ -n "$2" && "$2" != -* ]]; then
         MIRROR_NODE_VERSION="$2"
         shift 2
@@ -77,27 +77,24 @@ done
 echo "===================================================="
 echo "          🚀 Solo Deployment Summary                "
 echo "===================================================="
-echo ""
 echo "Consensus Node Version : ${CONSENSUS_NODE_VERSION}"
 echo "Mirror Node Version    : ${MIRROR_NODE_VERSION}"
-echo ""
 echo "----------------------------------------------------"
-echo ""
 echo "Components Status:"
 echo "  - Mirror Node   : $([[ "$MIRROR_NODE" == "true" ]] && echo "✅ Included" || echo "❌ Excluded")"
 echo "  - Explorer      : $([[ "$EXPLORER" == "true" ]] && echo "✅ Included" || echo "❌ Excluded")"
 echo "  - JSON-RPC      : $([[ "$JSON_RPC" == "true" ]] && echo "✅ Included" || echo "❌ Excluded")"
-echo ""
 echo "----------------------------------------------------"
-echo ""
 echo "Cluster Name      : ${SOLO_CLUSTER_NAME}"
 echo "Namespace         : ${SOLO_NAMESPACE}"
 echo "Deployment        : ${SOLO_DEPLOYMENT}"
-echo ""
 echo "===================================================="
 echo ""
 
 sleep 2
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HELPERS_DIR="$SCRIPT_DIR/helpers"
 
 
 kind create cluster -n ${SOLO_CLUSTER_NAME}
@@ -127,7 +124,7 @@ kubectl port-forward svc/haproxy-node1-svc -n ${SOLO_NAMESPACE} 50211:50211 &
 kubectl port-forward svc/envoy-proxy-node1-svc -n ${SOLO_NAMESPACE} 9998:8080 &
 
 if [[ "$MIRROR_NODE" == "true" ]]; then
-  solo mirror node add --cluster-ref kind-${SOLO_CLUSTER_NAME} --deployment ${SOLO_DEPLOYMENT} --mirror-node-version ${MIRROR_NODE_VERSION} --pinger ${ENABLE_INGRESS_FLAG} --dev --no-parallel-deploy -f helpers/mirror-overrides.yml
+  solo mirror node add --cluster-ref kind-${SOLO_CLUSTER_NAME} --deployment ${SOLO_DEPLOYMENT} --mirror-node-version ${MIRROR_NODE_VERSION} --pinger ${ENABLE_INGRESS_FLAG} --dev --no-parallel-deploy -f "$HELPERS_DIR/mirror-overrides.yml"
 
   kubectl get svc -n ${SOLO_NAMESPACE}
 
@@ -142,20 +139,20 @@ if [[ "$EXPLORER" == "true" ]]; then
 fi
 
 if [[ "$JSON_RPC" == "true" ]]; then
-  solo relay node add -i ${NODE_IDS} --deployment ${SOLO_DEPLOYMENT} --dev -f helpers/relay-overrides.yml
+  solo relay node add -i ${NODE_IDS} --deployment ${SOLO_DEPLOYMENT} --dev -f "$HELPERS_DIR/relay-overrides.yml"
 fi
 
 kubectl get svc -n ${SOLO_NAMESPACE}
 
 
-rm -rf ../out
-mkdir ../out
+rm -rf out
+mkdir out
 
-solo ledger account create --generate-ecdsa-key --deployment ${SOLO_DEPLOYMENT} --dev > ../out/account-output.txt
+solo ledger account create --generate-ecdsa-key --deployment ${SOLO_DEPLOYMENT} --dev > out/account-output.txt
 
-cat ../out/account-output.txt
+cat out/account-output.txt
 
-JSON=$(cat ../out/account-output.txt | python3 helpers/extract_account.py) || {
+JSON=$(cat out/account-output.txt | python3 "$HELPERS_DIR/extract_account.py") || {
   echo "Error: Python script failed"
   exit 1
 }
@@ -166,11 +163,11 @@ export ACCOUNT_PRIVATE_KEY=$(kubectl get secret account-key-${ACCOUNT_ID} -n ${S
 
 solo ledger account update --account-id "${ACCOUNT_ID}" --hbar-amount "${HBAR_AMOUNT}" --deployment "${SOLO_DEPLOYMENT}" --dev
 
-rm -rf ../out/solo.txt
-touch ../out/solo.txt
+rm -rf out/solo.txt
+touch out/solo.txt
 
-echo "accountId=${ACCOUNT_ID}" >> ../out/solo.txt
-echo "publicKey=${ACCOUNT_PUBLIC_KEY}" >> ../out/solo.txt
-echo "privateKey=${ACCOUNT_PRIVATE_KEY}" >> ../out/solo.txt
+echo "accountId=${ACCOUNT_ID}" >> out/solo.txt
+echo "publicKey=${ACCOUNT_PUBLIC_KEY}" >> out/solo.txt
+echo "privateKey=${ACCOUNT_PRIVATE_KEY}" >> out/solo.txt
 
-cat ../out/solo.txt
+cat out/solo.txt

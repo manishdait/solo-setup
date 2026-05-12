@@ -1,4 +1,4 @@
-# solo-setup
+# solo-setup-tool
 
 A bash script for deploying a local **Hiero Solo** network using the Solo CLI.
 
@@ -6,9 +6,9 @@ A bash script for deploying a local **Hiero Solo** network using the Solo CLI.
 
 | Script | Command | Description |
 | :--- | :--- | :--- |
-| `solo-ctl` |	`check` | Validates system dependencies (Docker, Kind, Node.js, Solo CLI). |
-| `solo-ctl` |	`bake` |	Deploys the network and optional components (Mirror, RPC, Explorer). |
-| `solo-ctl` |	`purge` |	Destroys the cluster, cleans up data, and kills ghost processes. |
+| `solo-ctl` |	`check` | Validates system dependencies (Docker, Kind, Kubectl, Solo CLI). |
+| `solo-ctl` |	`bake` |	Deploys the network and other components (Mirror, RPC, Explorer). |
+| `solo-ctl` |	`purge` |	Destroys the cluster, cleans up data, and other ghost processes. |
 
 ---
 
@@ -17,6 +17,7 @@ A bash script for deploying a local **Hiero Solo** network using the Solo CLI.
 ### 1. System Check
 
 Before deploying, ensure your environment meets the dependencies requirements.
+
 ```bash
 ./solo-ctl check
 ```
@@ -24,14 +25,14 @@ Before deploying, ensure your environment meets the dependencies requirements.
 ### 2. Deploy (Bake)
 You can deploy a minimal consensus node or include additional ecosystem components using flags.
 
-**Standard Deployment (Consensus only):**
+**Full Stack Deployment:**
 ```bash
 ./solo-ctl bake
 ```
 
-**Full Deployment:**
+**Core/Light Deployment (Consensus only):**
 ```bash
-./solo-ctl bake --include-all
+./solo-ctl bake --core
 ```
 
 **Custom Deployment:**
@@ -39,7 +40,7 @@ You can deploy a minimal consensus node or include additional ecosystem componen
 Enable specific components and override default versions:
 
 ```bash
-./solo-ctl bake --mirror true --rpc true --consensus-node-version v0.73.0
+./solo-ctl bake --mirror false --explorer false --node-tag v0.72.0
 ```
 
 ### 3. Clean Up (Purge)
@@ -52,9 +53,24 @@ To completely remove the deployment, reclaim system resources, and stop port-for
 ## Configuration Flags 
 | Flag | Argument |	Default |	Description |
 | :--- | :--- | :--- | :--- |
-| `-a`, `--include-all` |	N/A |	false |	Enables Mirror Node, JSON-RPC, and  Explorer. |
-| `-m`, `--mirror` |	true/false |	false |	Deploys the Mirror Node. |
-| `-r`, `--rpc` |	true/false |	false |	Deploys the JSON-RPC Relay. |
-| `-e`, `--explorer` |	true/false | false | Deploys the Block Explorer. |
-| `-cv`, `--consensus-node-version` |	string | v0.73.0 | Sets the Consensus Node release tag. |
-| `-mv`, `--mirror-node-version` | string | v0.153.0 | Sets the Mirror Node release tag. |
+| `-c`, `--core` |	N/A |	`false` |	Minimal mode runs only the Consensus Node. |
+| `-m`, `--mirror` |	`true/false` |	`true` |	Deploys the Mirror Node. |
+| `-r`, `--rpc` |	`true/false` |	`true` |	Deploys the JSON-RPC Relay. |
+| `-e`, `--explorer` |	`true`/`false` | `true` | Deploys the Block Explorer. |
+| `-nt`, `--node-tag` |	`string` | `v0.73.0` | Sets the Consensus Node release tag. |
+| `-mt`, `--mirror-tag` | `string` | `v0.153.0` | Sets the Mirror Node release tag. |
+
+
+## Output Artifacts
+
+After a successful `bake`, the tool generates a `out/` directory with below details:
+- `solo.txt`: Environment variables for your SDK (Account ID, Keys).
+- `account-output.txt`: Detailed JSON logs from the ledger account creation.
+
+## Port Forwarding
+The script automatically handles background port-forwards for Hiero services.
+
+- **GRPC:** 50211
+- **Mirror REST:** 5551
+- **Mirror Java REST:** 8084
+- **Mirror Node Explorer:** 38080
